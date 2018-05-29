@@ -7,6 +7,9 @@ code seems to work anyway but this is very confusing in the documentation (unles
 
 3. consider impact of Dos vs Unix carriage returns in data file for databank_io.py
 
+4. consider organization for package LICENSE.txt, README.txt, etc.
+good info here: http://the-hitchhikers-guide-to-packaging.readthedocs.io/en/latest/quickstart.html
+
 
 
 
