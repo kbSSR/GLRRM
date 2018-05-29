@@ -55,13 +55,13 @@ def getFridayDate(year=None, month=None, day=None):
     '''Get the date of the most recent (i.e. PRECEDING) friday given a yr,mo, day.  
 	This is to match the previous convention that the CGLRRM used for weekly data beginning on friday.'''
 
-    in_date=dt.date(year,month,day)
+    in_date=dt.date(year, month, day)
     idx=in_date.weekday() 
 	# idx= 0  1  2  3  4  5  6
 	#      M  T  W  R  F  Sa Su
     shift=[3, 4, 5, 6, 0, 1, 2]
 
-    friday_date=in_date-dt.timedelta(days=shift[idx])
+    friday_date = in_date-dt.timedelta(days=shift[idx])
     return friday_date
 
 

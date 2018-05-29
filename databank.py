@@ -1007,7 +1007,7 @@ class DataVault(object):
             du = DataUnits(units).primaryName()
             di = DataInterval(intvl).primaryName()
             dl = DataLocation(loc).primaryName()
-            ds = DataSeries(kind=dk, unit=du, intvl=di, loc=dl, 
+            ds = DataSeries(kind=dk, units=du, intvl=di, loc=dl, 
                  first=first, last=last, values=values)
         except:
             raise Exception(

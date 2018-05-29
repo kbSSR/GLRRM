@@ -1,0 +1,22 @@
+improvements for code:
+
+1. fix discrepancies between modules (startDate/endDate vs first/last, dataVals vs datavals)
+code seems to work anyway but this is very confusing in the documentation (unless this was intentional for some reason?)
+
+2. hide methods/functions not intended for the user in Databank.py so that help(databank) isn't so verbose
+
+3. consider impact of Dos vs Unix carriage returns in data file for databank_io.py
+
+
+
+
+
+improvements for documentation: 
+
+1. find a solution for what to call the "user/model" (the thing that will be calling databank) i tried to make a note of it in the foreward.  maybe this is good enough.
+
+2. more concise summary of databank in section 4
+
+3. better formatting (LaTex)
+
+4. stop using sooooo many parenthesese (James!)
