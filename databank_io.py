@@ -823,9 +823,7 @@ def __parse_data(filename, format_name, intvl, data_lines):
             for line in data_lines:
                 items = [s.strip() for s in line.split(',') if s]
                 yy = int(items[0])
-
                 yy_delta = yy - start.year
-
                 for i in range(1, len(items)):
                     ndx = 12*yy_delta + i - 1
                     datavals[ndx] = float(items[i])
@@ -930,9 +928,6 @@ def __write_datavals(filename, file_format, dataseries, width, prec):
     start = dataseries.startDate
     end = dataseries.endDate
     fmt = '{0:' + str(width) + '.' + str(prec) + 'f}'
-
-
-
 
     # define fill value # JAK?
     fill = -999.9
@@ -1095,6 +1090,7 @@ def __write_datavals(filename, file_format, dataseries, width, prec):
             # init date for loop
             date = start
             i = 0
+            
             while date <= end:
                 # construct line to write
                 data_line = fmt.format(vals[i])

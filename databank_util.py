@@ -562,7 +562,7 @@ def trimDataValues(values=None, oldstart=None, oldend=None,
         m1 = y*12 + m
         y = newe.year - olds.year
         m = newe.month - olds.month
-        m2 = y*12 + m
+        m2 = y*12 + m + 1
         return values[m1:m2]
 
 #-------------------------------------------------------
@@ -664,7 +664,7 @@ def rateToLinear(values=None, oldu=None, newu=None, area=None,
         y = first.year
         m = first.month
         for val in values:
-            d = days_in_month(yr=y, mo=m)
+            d = days_in_month(year=y, month=m)
             secs = d * 86400
             v2 = valueRateToLinear(value=val, oldu=oldu, 
                  newu=newu, area=area, secs=secs)
