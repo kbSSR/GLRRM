@@ -1,3 +1,6 @@
+#
+#  Quick little demo file showing a few capabilities
+#
 import sys
 import databank
 import databank_io
