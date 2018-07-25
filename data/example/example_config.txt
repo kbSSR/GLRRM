@@ -1,0 +1,15 @@
+title1: Example1 
+title2: Very early "fake" GLRRM overall config file
+title3: Used only to show how this might be done
+
+StartDate:  1980,  1,  1
+EndDate:    2010, 12, 31
+
+Output Directory: ex1/output/
+
+# initial Levels: 
+Sup Start Level   : 183.39 m 
+MHu Start Level   : 176.38 m
+St. C Start Level : 174.89 m
+Eri Start Level   : 173.96 m
+
