@@ -419,12 +419,13 @@ class DataSeries(object):
     years.
     """
 
-    def __init__(self, kind=None, units=None, intvl=None, loc=None,
+    def __init__(self, kind=None, units=None, intvl=None, loc=None, set=None,
                        first=None, last=None, values=None):
         self.dataKind     = 'na'
         self.dataUnits    = 'na'
         self.dataInterval = 'na'
         self.dataLocation = 'na'
+        self.dataSet      = 'na'
         self.startDate    = util.MISSING_DATE
         self.endDate      = util.MISSING_DATE
         self.dataVals     = []
@@ -459,7 +460,7 @@ class DataSeries(object):
         else:
             self.dataInterval = 'na'
 
-        if loc:            
+        if loc:
             try:
                 self.dataLocation = getPrimaryName(meta='location', name=loc)
                 if isinstance(loc, str):
@@ -468,6 +469,14 @@ class DataSeries(object):
                 raise Exception('Invalid location specifier in DataSeries init')
         else:
             self.dataLocation = 'na'
+
+        if set:
+            try:
+                self.dataSet = set
+            except:
+                raise Exception('Invalid set specifier in DataSeries init')
+        else:
+            self.dataSet = 'na'
 
         if first:
             self.startDate = util.date_from_entry(first)
@@ -497,6 +506,7 @@ class DataSeries(object):
         print(' units = ', DataUnits(self.dataUnits).outputNameLong())
         print(' intvl = ', DataInterval(self.dataInterval).outputNameLong())
         print(' loc   = ', DataLocation(self.dataLocation).outputNameLong())
+        print(' set   = ', self.dataSet)
         print(' start date = ', str(self.startDate))
         print(' end date   = ', str(self.endDate))
         print(' data values = ', self.dataVals)
@@ -508,6 +518,7 @@ class DataSeries(object):
             ' units = ', DataUnits(self.dataUnits).outputNameLong(), ';',
             ' intvl = ', DataInterval(self.dataInterval).outputNameLong(),  ';',
             ' loc = ',   DataLocation(self.dataLocation).outputNameLong(),  ';',
+            ' set = ',   self.dataSet, ';',
             ' dates = ', str(self.startDate),
             ' to ',      str(self.endDate)
         )
@@ -519,6 +530,7 @@ class DataSeries(object):
             'units=' + DataUnits(self.dataUnits).outputNameLong() + ';',
             'intvl=' + DataInterval(self.dataInterval).outputNameLong() + ';',
             'loc='   + DataLocation(self.dataLocation).outputNameLong() + ';',
+            'set='   + self.dataSet + ';',
             'dates=' + str(self.startDate) +
             ' to '   + str(self.endDate)
         )
@@ -548,6 +560,10 @@ class DataSeries(object):
 
         if newData.dataLocation != self.dataLocation:
             print('Error. Mismatched locations in DataSeries.add_data')
+            raise TypeError('Invalid attempt to add data to a DataSeries')
+
+        if newData.dataSet != self.dataSet:
+            print('Error. Mismatched set designators in DataSeries.add_data')
             raise TypeError('Invalid attempt to add data to a DataSeries')
 
         #
@@ -854,11 +870,12 @@ class DataVault(object):
     #-------------------------------------------------------------------
     @classmethod
     def _construct_vault_key(thisclass, ds=None, kind=None, 
-                             intvl=None, loc=None):
+                             intvl=None, loc=None, set=None):
         if ds:
             kstr = ds.dataKind
             istr = ds.dataInterval
             lstr = ds.dataLocation
+            sstr = ds.dataSet
             return kstr + '_' + istr + '_' + lstr
 
         #
@@ -875,9 +892,17 @@ class DataVault(object):
             kstr = kobj.primaryName()
             istr = iobj.primaryName()
             lstr = lobj.primaryName()
-            return kstr + '_' + istr + '_' + lstr
+            key = kstr + '_' + istr + '_' + lstr
+        else:
+            raise ValueError('Missing DataSeries information in _construct_vault_key')
+            
+        if set:
+            key = key + '_' + set
+        else:
+            key = key + '_na'
+         
+        return key
 
-        raise ValueError('Missing DataSeries information in _construct_vault_key')
 
     #-------------------------------------------------------------------
     def printVault(self):
@@ -1000,20 +1025,21 @@ class DataVault(object):
     #---------------------------------------------------------------
     #  Equivalent to deposit, but with all fields individually specified.
     #---------------------------------------------------------------
-    def deposit_data(self, kind=None, units=None, intvl=None, loc=None, 
-                     first=None, last=None, values=None):
+    def deposit_data(self, kind=None, units=None, intvl=None, loc=None, set=None,
+                     first=None, last=None, values=None, lake_area=None):
         try:
             dk = DataKind(kind).primaryName()
             du = DataUnits(units).primaryName()
             di = DataInterval(intvl).primaryName()
             dl = DataLocation(loc).primaryName()
-            ds = DataSeries(kind=dk, units=du, intvl=di, loc=dl, 
+            dt = set
+            ds = DataSeries(kind=dk, units=du, intvl=di, loc=dl, set=dt,
                  first=first, last=last, values=values)
         except:
             raise Exception(
                 'Error creating temporary DataSeries object in deposit_data()')
             return
-        self.deposit(ds)
+        self.deposit(ds, lake_area)
 
     #----------------------------------------------------------------
     #  Caller must specify the kind, interval, location and units.
@@ -1024,8 +1050,8 @@ class DataVault(object):
     #  If specified ok, but data does not exist in the vault, then
     #    this also returns None, but no exception is generated.
     #----------------------------------------------------------------
-    def withdraw(self, kind=None, units=None, intvl=None, loc=None, 
-                 first=None, last=None):
+    def withdraw(self, kind=None, units=None, intvl=None, loc=None, set=None,
+                 first=None, last=None, lake_area=None):
 
         #
         #  Verify that all metadata strings were validly specified.
@@ -1072,10 +1098,15 @@ class DataVault(object):
             raise Exception('Invalid or missing location specification '
                            + 'to DataVault.withdraw()')
 
+        if set:
+            dt = set
+        else:
+            dt = 'na'
+
         #
         #  Construct the vault key from the lookup strings
         #
-        key = type(self)._construct_vault_key(kind=dk, intvl=di, loc=dl)
+        key = type(self)._construct_vault_key(kind=dk, intvl=di, loc=dl, set=dt)
         
         #
         #  Get a temporary dataset
