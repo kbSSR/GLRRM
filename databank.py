@@ -843,10 +843,10 @@ class DataVault(object):
     #    1) The metadata in a DataSeries object, if ds is provided.
     #       OR
     #    2) The specific kind, interval, location specified.
-    #  If ds is given, kind, intvl, loc will be ignored.
+    #  If ds is given, kind, intvl, loc, set will be ignored.
     #
     #  Returns a text string that looks like this:
-    #    kind_intvl_loc
+    #    kind_intvl_loc_set
     #  where:
     #     kind  = the character string defined as the first entry in the
     #             _inputStrings tuple for this data kind. e.g. For runoff data,
@@ -861,11 +861,20 @@ class DataVault(object):
     #             story as the data kind.
     #     loc   = the character string defined as the first entry in the
     #             _inputStrings tuple for this location. Same story as kind/intvl.
+    #     set   = character string name of the data "set" associated with this data.
+    #             e.g. "fcst1", "fcst2", "fcst3", etc.  Length is unrestricted, but
+    #             try not to go too crazy, and no imbedded spaces.
+    #             If set is not specified, a default value of "na" will be used 
+    #             in the key string.
     #
     #  For example, if the function call looks like:
     #     myVault._construct_vault_key(kind='runoff', intvl='daily', loc='ont')
     #  then the kind/intvl/loc values will turn into 'run'/'dy'/'on', and the
-    #  resulting lookup key will be 'run_dy_on'.
+    #  resulting lookup key will be 'run_dy_on_na'.
+    #
+    #  If the function call looks like:
+    #     myVault._construct_vault_key(kind='runoff', intvl='daily', loc='ont', set='abc')
+    #  then the resulting lookup key will be 'run_dy_on_abc'.
     #
     #-------------------------------------------------------------------
     @classmethod
@@ -876,7 +885,11 @@ class DataVault(object):
             istr = ds.dataInterval
             lstr = ds.dataLocation
             sstr = ds.dataSet
-            return kstr + '_' + istr + '_' + lstr
+            key  = kstr + '_' + istr + '_' + lstr
+            if set:
+                return key + '_' + set
+            else:
+                return key + '_na'
 
         #
         #  If all 3 items are specified, e.g.
@@ -1141,11 +1154,18 @@ class DataVault(object):
                 intvl=tds.dataInterval)
             
         #
+        #  Use the correct lake area in subsequent data conversion
+        #
+        if lake_area:
+            lkarea = lake_area
+        else
+            lkarea = self.getLakeArea(tds.dataLocation)
+        
+        #
         #  Now build a final dataset that has the correct units and 
         #  period of record.
         #
         try:
-            lkarea = self.getLakeArea(tds.dataLocation)
             newvals = util.convertValues(values=trimvals,
                     oldunits=tds.dataUnits, newunits=units, 
                     intvl=tds.dataInterval, area=lkarea, 
@@ -1159,5 +1179,3 @@ class DataVault(object):
         except:
             raise Exception('Error while attempting to convert data units in '
                           + 'DataVault.withdraw()')
-            
-
