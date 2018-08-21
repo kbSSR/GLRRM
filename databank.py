@@ -885,11 +885,8 @@ class DataVault(object):
             istr = ds.dataInterval
             lstr = ds.dataLocation
             sstr = ds.dataSet
-            key  = kstr + '_' + istr + '_' + lstr
-            if set:
-                return key + '_' + set
-            else:
-                return key + '_na'
+            key  = kstr + '_' + istr + '_' + lstr + '_' + sstr
+            return key
 
         #
         #  If all 3 items are specified, e.g.
@@ -906,15 +903,14 @@ class DataVault(object):
             istr = iobj.primaryName()
             lstr = lobj.primaryName()
             key = kstr + '_' + istr + '_' + lstr
+            if set:
+                key = key + '_' + set
+            else:
+                key = key + '_na'
+            return key
         else:
             raise ValueError('Missing DataSeries information in _construct_vault_key')
             
-        if set:
-            key = key + '_' + set
-        else:
-            key = key + '_na'
-         
-        return key
 
 
     #-------------------------------------------------------------------
@@ -926,9 +922,9 @@ class DataVault(object):
     #  The deposit() function is how a user adds data to the vault.
     #  ds is a DataSeries object.
     #-------------------------------------------------------------------
-    def deposit(self, ds, lake_area=None):
+    def deposit(self, datser, lake_area=None):
         try:
-            key = type(self)._construct_vault_key(ds)
+            key = type(self)._construct_vault_key(datser)
         except:
             raise Exception('databank.deposit: error getting the key')
 
@@ -936,25 +932,25 @@ class DataVault(object):
         #  If user did not specify a lake area, then assign a value (if needed)
         #
         if not lake_area:
-            lake_area = self.getLakeArea(ds.dataLocation)
+            lake_area = self.getLakeArea(datser.dataLocation)
             
         #
         #  Create a "normalized" DataSeries object such that the data
         #  units and values conform to the prescribed data units
         #  for storage in the vault.
         #
-        tempvals = copy(ds.dataVals)      # default is to use data as-is
-        normstr = self.getNormalizedUnits(kind=ds.dataKind)
+        tempvals = copy(datser.dataVals)      # default is to use data as-is
+        normstr = self.getNormalizedUnits(kind=datser.dataKind)
         try:
             #
             #  If needed, convert data units.
             #
-            if ds.dataUnits != normstr:
+            if datser.dataUnits != normstr:
                 try:
                     tempvals = None
-                    if ds.dataUnits != normstr:
-                        oldstr = ds.dataUnits
-                        oldvals = copy(ds.dataVals)
+                    if datser.dataUnits != normstr:
+                        oldstr = datser.dataUnits
+                        oldvals = copy(datser.dataVals)
                         
                         if (oldstr in util.linear_units) and normstr=='m': 
                             tempvals = util.convertValues(values=oldvals, 
@@ -968,15 +964,15 @@ class DataVault(object):
                         elif normstr=='m':
                             tempvals = util.convertValues(values=oldvals, 
                                     oldunits=oldstr, newunits=normstr,
-                                    area=lake_area, first=ds.startDate, 
-                                    last=ds.endDate)
+                                    area=lake_area, first=datser.startDate, 
+                                    last=datser.endDate)
                         elif normstr=='cms':
                             tempvals = util.convertValues(values=oldvals, 
                                     oldunits=oldstr, newunits=normstr,
-                                    area=lake_area, first=ds.startDate, 
-                                    last=ds.endDate)
+                                    area=lake_area, first=datser.startDate, 
+                                    last=datser.endDate)
                         else:
-                            print('ds.dataUnits=', ds.dataUnits)
+                            print('datser.dataUnits=', datser.dataUnits)
                             print('normstr=', normstr)
                             raise Exception('Unhandled data units conversion.')
                 except:
@@ -988,9 +984,9 @@ class DataVault(object):
         #  Create a temporary dataset that contains the data to be added, 
         #  in the correct units.
         #
-        tds = DataSeries(kind=ds.dataKind, units=normstr, loc=ds.dataLocation,
-                    intvl=ds.dataInterval, first=ds.startDate, 
-                    last=ds.endDate, values=tempvals)
+        tds = DataSeries(kind=datser.dataKind, units=normstr, loc=datser.dataLocation,
+                    intvl=datser.dataInterval, set=datser.dataSet, 
+                    first=datser.startDate, last=datser.endDate, values=tempvals)
             
         #
         #  Do we already have a data series like this?
@@ -1048,11 +1044,11 @@ class DataVault(object):
             dt = set
             ds = DataSeries(kind=dk, units=du, intvl=di, loc=dl, set=dt,
                  first=first, last=last, values=values)
+            self.deposit(ds, lake_area)
         except:
             raise Exception(
                 'Error creating temporary DataSeries object in deposit_data()')
             return
-        self.deposit(ds, lake_area)
 
     #----------------------------------------------------------------
     #  Caller must specify the kind, interval, location and units.
@@ -1111,10 +1107,9 @@ class DataVault(object):
             raise Exception('Invalid or missing location specification '
                            + 'to DataVault.withdraw()')
 
+        dt = 'na'
         if set:
             dt = set
-        else:
-            dt = 'na'
 
         #
         #  Construct the vault key from the lookup strings
@@ -1158,7 +1153,7 @@ class DataVault(object):
         #
         if lake_area:
             lkarea = lake_area
-        else
+        else:
             lkarea = self.getLakeArea(tds.dataLocation)
         
         #
